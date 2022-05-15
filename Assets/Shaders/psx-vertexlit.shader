@@ -1,6 +1,12 @@
-﻿Shader "psx/vertexlit" {
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+Shader "psx/vertexlit" {
 	Properties{
 		_MainTex("Base (RGB)", 2D) = "white" {}
+		// TODO: transformar en vector
+		_VertexPrecisionX("Vertex Precision", int) = 160
+		_VertexPrecisionY("Vertex Precision", int) = 120
+		
 	}
 		SubShader{
 			Tags { "RenderType" = "Opaque" }
@@ -27,16 +33,23 @@
 					uniform half4 unity_FogStart;
 					uniform half4 unity_FogEnd;
 
+					int _VertexPrecisionX;		
+					int _VertexPrecisionY;		
+		
 					v2f vert(appdata_full v)
 					{
 						v2f o;
 
 						//Vertex snapping
-						float4 snapToPixel = mul(UNITY_MATRIX_MVP,v.vertex);
+						// TODO: add parameters
+						float4 snapToPixel = UnityObjectToClipPos(v.vertex);
 						float4 vertex = snapToPixel;
 						vertex.xyz = snapToPixel.xyz / snapToPixel.w;
-						vertex.x = floor(160 * vertex.x) / 160;
-						vertex.y = floor(120 * vertex.y) / 120;
+						if (_VertexPrecisionX > 0)
+						{
+							vertex.x = floor(_VertexPrecisionX * vertex.x) / _VertexPrecisionX;
+							vertex.y = floor(_VertexPrecisionY * vertex.y) / _VertexPrecisionY;
+						}
 						vertex.xyz *= snapToPixel.w;
 						o.pos = vertex;
 
@@ -64,10 +77,10 @@
 						o.colorFog.a = clamp(fogDensity,0,1);
 
 						//Cut out polygons
-						if (distance > unity_FogStart.z + unity_FogColor.a * 255)
-						{
-							o.pos.w = 0;
-						}
+						// if (distance > unity_FogStart.z + unity_FogColor.a * 255)
+						// {
+						// 	o.pos.w = 0;
+						// }
 
 						return o;
 					}
