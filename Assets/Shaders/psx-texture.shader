@@ -84,17 +84,16 @@
 						OUT.uv_MainTex = IN.texcoord;
 					}
 
-					//Fog
-					float4 fogColor = unity_FogColor;
-
+					// Fog
 					float fogDensity = (unity_FogEnd - distance) / (unity_FogEnd - unity_FogStart);
 					OUT.normal.g = fogDensity;
 					OUT.normal.b = 1;
 
-					OUT.colorFog = fogColor;
-					OUT.colorFog.a = clamp(fogDensity,0,1);
+					OUT.colorFog = unity_FogColor;
+					// clamp max fog density to fog alpha channel
+					OUT.colorFog.a = clamp(fogDensity, 1-unity_FogColor.a, 1);
 
-					//Cut out polygons
+					// Cut out polygons
 					// if (distance > unity_FogStart.z + unity_FogColor.a * 255)
 					// {
 					// 	o.pos.w = 0;
@@ -109,11 +108,8 @@
 				{
 					half4 color = tex2D(_MainTex, _AffineMapping ? IN.uv_MainTex / IN.normal.r : IN.uv_MainTex);
 					color *= IN.color; // shading
-
-					// TODO: use fog alpha to limit fog opacity
-					color *= IN.colorFog.a; // fog
-					
-					color.rgb += IN.colorFog.rgb*(1 - IN.colorFog.a);
+					color *= IN.colorFog.a; // fog darkening
+					color.rgb += IN.colorFog.rgb * (1 - IN.colorFog.a); // fog tint
 					return color;
 				}
 			ENDCG 
