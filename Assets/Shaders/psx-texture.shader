@@ -1,19 +1,21 @@
 ﻿Shader "psx/texture" {
 	Properties {
 		_MainTex("Base (RGB)", 2D) = "white" {}
+		_Color ("Main Color", COLOR) = (1,1,1,1)
 		[MaterialToggle] _AffineMapping("Affine Mapping", float) = 1
 		[MaterialToggle] _ScreenspaceVertexPrecision("Screen Space Vertex Snapping", float) = 0
 		[ShowAsVector2] _VertexPrecision("Vertex Snapping Precision", Vector) = (0, 0, 0, 0)
 	}
 	
 	SubShader {
-		Tags { "RenderType" = "Opaque" }
+		Tags { "Queue" = "Opaque" }
 		LOD 200
-
+		Blend SrcAlpha OneMinusSrcAlpha
+		 
 		Pass {
 			Lighting On
+			
 			CGPROGRAM
-
 				#pragma vertex vert
 				#pragma fragment frag
 				#include "UnityCG.cginc"
@@ -103,13 +105,18 @@
 				}
 
 				sampler2D _MainTex;
+				fixed4 _Color;
 
 				float4 frag(v2f IN) : COLOR
 				{
-					half4 color = tex2D(_MainTex, _AffineMapping ? IN.uv_MainTex / IN.normal.r : IN.uv_MainTex);
+					half4 color = tex2D(_MainTex, float4((_AffineMapping ? IN.uv_MainTex / IN.normal.r : IN.uv_MainTex) * _MainTex_ST, 0, 0));
 					color *= IN.color; // shading
-					color *= IN.colorFog.a; // fog darkening
-					color.rgb += IN.colorFog.rgb * (1 - IN.colorFog.a); // fog tint
+					color *= _Color; // tinting
+
+					// fog
+					color.rgb *= IN.colorFog.a; // darkening
+					color.rgb += IN.colorFog.rgb * (1 - IN.colorFog.a); // tint
+					
 					return color;
 				}
 			ENDCG 
