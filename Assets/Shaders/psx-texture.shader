@@ -69,7 +69,7 @@
 
 					// Vertex lighting 
 				//	o.color =  float4(ShadeVertexLights(v.vertex, v.normal), 1.0);
-					OUT.color = float4(ShadeVertexLightsFull(IN.vertex, IN.normal, 4, true), 1.0);
+					OUT.color = float4(ShadeVertexLightsFull(IN.vertex, IN.normal, 8, true), 1.0);
 					OUT.color *= IN.color;
 
 					float distance = length(mul(UNITY_MATRIX_MV,IN.vertex));
