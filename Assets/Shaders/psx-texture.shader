@@ -3,12 +3,14 @@
 		_MainTex("Base (RGB)", 2D) = "white" {}
 		_Color ("Main Color", COLOR) = (1,1,1,1)
 		[MaterialToggle] _AffineMapping("Affine Mapping", float) = 1
+		[MaterialToggle] _Fog("Fog", float) = 1
 		[MaterialToggle] _ScreenspaceVertexPrecision("Screen Space Vertex Snapping", float) = 0
 		[ShowAsVector2] _VertexPrecision("Vertex Snapping Precision", Vector) = (0, 0, 0, 0)
+		[HDR] _HighlightColor ("Highlight", COLOR) = (0,0,0,0)
 	}
 	
 	SubShader {
-		Tags { "Queue" = "Opaque" }
+		Tags { }
 		LOD 200
 		Blend SrcAlpha OneMinusSrcAlpha
 		 
@@ -36,8 +38,11 @@
 
 				vector _VertexPrecision;
 			
-				float _AffineMapping;		
-				float _ScreenspaceVertexPrecision;		
+				float _AffineMapping;
+				float _Fog;
+				float _ScreenspaceVertexPrecision;
+				
+				fixed4 _HighlightColor;
 	
 				v2f vert(appdata_full IN)
 				{
@@ -86,14 +91,17 @@
 						OUT.uv_MainTex = IN.texcoord;
 					}
 
-					// Fog
-					float fogDensity = (unity_FogEnd - distance) / (unity_FogEnd - unity_FogStart);
-					OUT.normal.g = fogDensity;
-					OUT.normal.b = 1;
+					if(_Fog)
+					{
+						// Fog
+						float fogDensity = (unity_FogEnd - distance) / (unity_FogEnd - unity_FogStart);
+						OUT.normal.g = fogDensity;
+						OUT.normal.b = 1;
 
-					OUT.colorFog = unity_FogColor;
-					// clamp max fog density to fog alpha channel
-					OUT.colorFog.a = clamp(fogDensity, 1-unity_FogColor.a, 1);
+						OUT.colorFog = unity_FogColor;
+						// clamp max fog density to fog alpha channel
+						OUT.colorFog.a = clamp(fogDensity, 1-unity_FogColor.a, 1);
+					}
 
 					// Cut out polygons
 					// if (distance > unity_FogStart.z + unity_FogColor.a * 255)
@@ -113,13 +121,19 @@
 					color *= IN.color; // shading
 					color *= _Color; // tinting
 
+					// Highlight
+					color.rgb += color.rgb * _HighlightColor.rgb * _HighlightColor.a; 
+					
 					// fog
-					color.rgb *= IN.colorFog.a; // darkening
-					color.rgb += IN.colorFog.rgb * (1 - IN.colorFog.a); // tint
+					if(_Fog)
+					{
+						color.rgb *= IN.colorFog.a; // darkening
+						color.rgb += IN.colorFog.rgb * (1 - IN.colorFog.a); // tint
+					}
 					
 					return color;
 				}
 			ENDCG 
 		}
 	}
-}
+} 
