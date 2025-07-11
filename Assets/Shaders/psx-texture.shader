@@ -30,6 +30,9 @@
 					half4 color : COLOR0;
 					half4 colorFog : COLOR1;
 					half3 normal : TEXCOORD1;
+
+					float3 worldNormal : TEXCOORD2;  // new
+					float3 worldPos : TEXCOORD3;     // new
 				};
 
 				float4 _MainTex_ST;
@@ -77,6 +80,9 @@
 					OUT.color = float4(ShadeVertexLightsFull(IN.vertex, IN.normal, 8, true), 1.0);
 					OUT.color *= IN.color;
 
+					OUT.worldNormal = UnityObjectToWorldNormal(IN.normal);
+					OUT.worldPos = mul(unity_ObjectToWorld, IN.vertex).xyz;
+
 					float distance = length(mul(UNITY_MATRIX_MV,IN.vertex));
 					
 					// Affine Texture Mapping
@@ -121,8 +127,12 @@
 					color *= IN.color; // shading
 					color *= _Color; // tinting
 
-					// Highlight
-					color.rgb += color.rgb * _HighlightColor.rgb * _HighlightColor.a; 
+					// Directional Highlight based on view direction
+					float3 viewDir = normalize(_WorldSpaceCameraPos - IN.worldPos);
+					float highlightStrength = saturate(dot(IN.worldNormal, viewDir));
+
+					// highlightStrength = pow(highlightStrength, 4.0); // intensity
+					color.rgb += color.rgb * _HighlightColor.rgb * _HighlightColor.a * highlightStrength;
 					
 					// fog
 					if(_Fog)
