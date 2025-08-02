@@ -3,7 +3,7 @@
 		_MainTex("Base (RGB)", 2D) = "white" {}
 		_Color ("Main Color", COLOR) = (1,1,1,1)
 		[MaterialToggle] _AffineMapping("Affine Mapping", float) = 1
-		[MaterialToggle] _Fog("Fog", float) = 1
+		_Fog("Fog", float) = 1
 		[MaterialToggle] _ScreenspaceVertexPrecision("Screen Space Vertex Snapping", float) = 0
 		[ShowAsVector2] _VertexPrecision("Vertex Snapping Precision", Vector) = (0, 0, 0, 0)
 		[HDR] _HighlightColor ("Highlight", COLOR) = (0,0,0,0)
@@ -97,17 +97,14 @@
 						OUT.uv_MainTex = IN.texcoord;
 					}
 
-					if(_Fog)
-					{
-						// Fog
-						float fogDensity = (unity_FogEnd - distance) / (unity_FogEnd - unity_FogStart);
-						OUT.normal.g = fogDensity;
-						OUT.normal.b = 1;
+					// Fog
+					float fogDensity = (unity_FogEnd - distance) / (unity_FogEnd - unity_FogStart) / _Fog;
+					OUT.normal.g = fogDensity;
+					OUT.normal.b = 1;
 
-						OUT.colorFog = unity_FogColor;
-						// clamp max fog density to fog alpha channel
-						OUT.colorFog.a = clamp(fogDensity, 1-unity_FogColor.a, 1);
-					}
+					OUT.colorFog = unity_FogColor;
+					// clamp max fog density to fog alpha channel
+					OUT.colorFog.a = clamp(fogDensity, 1-unity_FogColor.a, 1);
 
 					// Cut out polygons
 					// if (distance > unity_FogStart.z + unity_FogColor.a * 255)
