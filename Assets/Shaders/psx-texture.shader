@@ -1,4 +1,5 @@
-﻿Shader "psx/texture" {
+﻿
+Shader "psx/texture" {
 	Properties {
 		_MainTex("Base (RGB)", 2D) = "white" {}
 		_Color ("Main Color", COLOR) = (1,1,1,1)
@@ -7,6 +8,7 @@
 		[MaterialToggle] _ScreenspaceVertexPrecision("Screen Space Vertex Snapping", float) = 0
 		[ShowAsVector2] _VertexPrecision("Vertex Snapping Precision", Vector) = (0, 0, 0, 0)
 		[HDR] _HighlightColor ("Highlight", COLOR) = (0,0,0,0)
+		_HighlightFrequency("Cycle Frequency", Float) = 0
 	}
 	
 	SubShader {
@@ -44,8 +46,9 @@
 				float _AffineMapping;
 				float _Fog;
 				float _ScreenspaceVertexPrecision;
-				
+
 				fixed4 _HighlightColor;
+				float _HighlightFrequency;
 	
 				v2f vert(appdata_full IN)
 				{
@@ -128,8 +131,16 @@
 					float3 viewDir = normalize(_WorldSpaceCameraPos - IN.worldPos);
 					float highlightStrength = saturate(dot(IN.worldNormal, viewDir));
 
+					// Cycle highlight alpha
+					float cycle = 1;
+					if (_HighlightFrequency)
+						cycle = sin(_Time.y * (2 * UNITY_PI * _HighlightFrequency)) * 0.5 + 0.5;
+
+	                float4 highlight = _HighlightColor;
+	                highlight.a = cycle;
+					
 					// highlightStrength = pow(highlightStrength, 4.0); // intensity
-					color.rgb += color.rgb * _HighlightColor.rgb * _HighlightColor.a * highlightStrength;
+					color.rgb += color.rgb * highlight.rgb * highlight.a * highlightStrength;
 					
 					// fog
 					if(_Fog)
