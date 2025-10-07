@@ -8,6 +8,7 @@ Shader "psx/texture" {
 		[MaterialToggle] _ScreenspaceVertexPrecision("Screen Space Vertex Snapping", float) = 0
 		[ShowAsVector2] _VertexPrecision("Vertex Snapping Precision", Vector) = (0, 0, 0, 0)
 		[HDR] _HighlightColor ("Highlight", COLOR) = (0,0,0,0)
+		_HighlightMinimum("Highlight Minimum", float) = 0
 		_HighlightFrequency("Cycle Frequency", Float) = 0
 	}
 	
@@ -48,6 +49,7 @@ Shader "psx/texture" {
 				float _ScreenspaceVertexPrecision;
 
 				fixed4 _HighlightColor;
+				float _HighlightMinimum;
 				float _HighlightFrequency;
 	
 				v2f vert(appdata_full IN)
@@ -134,7 +136,7 @@ Shader "psx/texture" {
 					// Cycle highlight alpha
 					float cycle = 1;
 					if (_HighlightFrequency)
-						cycle = sin(_Time.y * (2 * UNITY_PI * _HighlightFrequency)) * 0.5 + 0.5;
+						cycle = sin(_Time.y * (2 * UNITY_PI * _HighlightFrequency)) * (1 - _HighlightMinimum) * 0.5 + 0.5 + (_HighlightMinimum / 2);
 
 	                float4 highlight = _HighlightColor;
 	                highlight.a = cycle;
