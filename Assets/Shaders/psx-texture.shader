@@ -7,6 +7,7 @@ Shader "psx/texture" {
 		_Fog("Fog", float) = 1
 		[MaterialToggle] _ScreenspaceVertexPrecision("Screen Space Vertex Snapping", float) = 0
 		[ShowAsVector2] _VertexPrecision("Vertex Snapping Precision", Vector) = (0, 0, 0, 0)
+		[MaterialToggle] _HighlightDirectional("Directional Highlight", float) = 1
 		[HDR] _HighlightColor ("Highlight", COLOR) = (0,0,0,0)
 		_HighlightMinimum("Highlight Minimum", float) = 0
 		_HighlightFrequency("Cycle Frequency", Float) = 0
@@ -48,6 +49,7 @@ Shader "psx/texture" {
 				float _Fog;
 				float _ScreenspaceVertexPrecision;
 
+				float _HighlightDirectional;
 				fixed4 _HighlightColor;
 				float _HighlightMinimum;
 				float _HighlightFrequency;
@@ -130,8 +132,12 @@ Shader "psx/texture" {
 					color *= _Color; // tinting
 
 					// Directional Highlight based on view direction
-					float3 viewDir = normalize(_WorldSpaceCameraPos - IN.worldPos);
-					float highlightStrength = saturate(dot(IN.worldNormal, viewDir));
+					float highlightStrength = 1;
+					if (_HighlightDirectional)
+					{
+						float3 viewDir = normalize(_WorldSpaceCameraPos - IN.worldPos);
+						highlightStrength = saturate(dot(IN.worldNormal, viewDir));
+					}
 
 					// Cycle highlight alpha
 					float cycle = 1;
